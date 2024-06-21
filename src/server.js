@@ -1,10 +1,16 @@
-// import { configDotenv } from "dotenv"
-import express from 'express'
+import dotenv from 'dotenv'
+import { app } from "./app.js"
+import connectDB from './database/db.js'
 
-const app=express()
-
+dotenv.config()
 const port=process.env.PORT || 8000
 
-app.listen(port,()=>{
-    console.log(`Server started at http://localhost:${port}`)
+connectDB()
+.then(()=>{
+    app.listen(port,()=>{
+        console.log(`Server started at http://localhost:${port}`)
+    })
+})
+.catch((error)=>{
+    console.log("Mongo error",error)
 })
