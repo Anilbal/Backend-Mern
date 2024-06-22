@@ -47,7 +47,7 @@ const userSchema=new mongoose.Schema({
 //middleware for hasing passowrd
 userSchema.pre("save", async function(next){
     if(this.isModified("password")){
-        this.password=bcrypt.hash(this.password,10)
+        this.password=await bcrypt.hash(this.password,10)
         next()
     }else{
         return next()
@@ -80,4 +80,4 @@ userSchema.methods.generatingRefreshToken=async function(){
     {expiresIn:process.env.REFRESH_TOKEN_EXPIRY})
 }
 
-export const UserModel=mongoose.model("User",userSchema)
+export const User=mongoose.model("User",userSchema)
