@@ -41,3 +41,17 @@ Examples:-
     404-Not found
     500-internal server error
     504-Gateway timeout
+
+# Access And Refresh Token in backend
+
+# Access Token
+Purpose: Lets the client access specific resources on the server.
+Lifetime: Short-lived (e.g., 15 minutes).
+Usage: Sent with each request to the server to prove the user's identity.
+Storage: Temporarily stored in the client (e.g., in memory).
+
+# Refresh Token
+Purpose: Used to get a new access token when the old one expires.
+Lifetime: Long-lived (e.g., 7 days).
+Usage: Sent to the server to request a new access token.
+Storage: Stored securely, typically in an HTTP-only cookie.
