@@ -176,11 +176,175 @@ const refreshAccessToken=asyncHandler(async(req,res)=>{
     }
 })
 
+//change password
+const changePassword=asyncHandler(async(req,res)=>{
+    const {oldPassword,newPassword}=req.body
 
+    const user=await User.findById(req.user?._id)
+    const isOldPasswordCorrect=await user.isPasswordCorrect(oldPassword)
+
+    if(!isOldPasswordCorrect){
+        return res.status(400).json({message:"Password is incorrect"})
+    }
+
+    user.password=newPassword
+    await user.save({validateBeforeSave:false})
+
+    return res.status(200).json({message:"Password changed successfuly"})
+})
+
+
+//get current user
+const getCurrentUser=asyncHandler(async(req,res)=>{
+    return res.status(200).json(req.user)
+})
+
+//user update
+const updateAccountDetails=asyncHandler(async(req,res)=>{
+    const {fullName,email}=req.body
+    if(!fullName || !email){
+    return res.status(200).json({message:"All field are required"})
+    }
+
+    const user=await User.findByIdAndUpdate(req.user?._id,{
+        $set:{
+            fullName,
+            email
+        }
+    },{new:true}).select("-password")
+
+    return res.status(200).json({user,message:"Account details updated successfully"})
+})
+
+//user profile update
+const updateUserAvatar=asyncHandler(async(req,res)=>{
+    const localPath=req.file?.path
+    if(!localPath){
+        return res.status(400).json({message:"Avatar file is missing"})
+    }
+
+    const avatar=await uploadOnCloudinary(localPath)
+    if(!avatar){
+        return res.status(400).json({message:"Error on uploading"})
+    }
+
+    const user=await User.findByIdAndUpdate(req.user?._id,{
+        $set:{
+            avatar:avatar.url
+        }
+    },{new:true}).select("-password")
+
+    return res.status(200).json({
+        user,
+        message:"Avatar changed succssfully"
+    })
+})
+
+
+//user profile update
+const updateCoverImage=asyncHandler(async(req,res)=>{
+    const coverImageLocalPath=req.file?.path
+    if(!coverImageLocalPath){
+        return res.status(400).json({message:"Image file is missing"})
+    }
+
+    const coverImage=await uploadOnCloudinary(coverImageLocalPath)
+    if(!coverImage.url){
+        return res.status(400).json({message:"Error on uploading"})
+    }
+
+    const user=await User.findByIdAndUpdate(req.user?._id,{
+        $set:{
+            coverImage:coverImage.url
+        }
+    },{new:true}).select("-password")
+
+    return res.status(200).json({
+        user,
+        message:"Cover image changed succssfully"
+    })
+})
+
+//User profile
+const getUserChannelProfile=asyncHandler(async(req,res)=>{
+    const {username}=req.params
+
+    if(!username?.trim()){
+        return res.status(401).json({message:"Username not found"})
+    }   
+
+    const channel=await User.aggregate([
+        {
+            $match:{
+                username:username?.toLowerCase()
+            }
+        },
+        {
+            $lookup:{
+                from:"subscriptions",
+                localField:"_id",
+                foreignField:"channel",
+                as:"subscribers"
+            }
+        },
+        {
+            $lookup:{
+                from:"subscriptions",
+                localField:"_id",
+                foreignField:"subscriber",
+                as:"subscribedTo"
+            }
+        },{
+            $addFields:{
+                subscribersCount:{
+                    $size:"$subscribers"
+                },
+                channelSubscribedCount:{
+                    $size:"$subscribedTo"
+                },
+                isSubscribed:{
+                    $cond:{
+                        if:{$in:[req.user?._id,"$subscribers.subscriber"]},
+                        then:true,
+                        else:false
+                    }
+                }
+            }
+        },
+        {
+            $project:{
+                fullName:1,
+                username:1,
+                subscribersCount:1,
+                channelSubscribedCount:1,
+                isSubscribed:1,
+                avatar:1,
+                coverImage:1,
+                email:1,
+            }
+        }
+    ])
+
+    // console.log(channel)
+    if(!channel.length){
+        return res.status(401).json({message:"Channel not found"})
+    }
+
+    return res.status(200).json({
+        channel:channel[0],
+        message:"User channel got successfully"
+    })
+})
 
 export {
     registerUser,
     loginUser,
     logoutUser,
-    refreshAccessToken
+    refreshAccessToken,
+    changePassword,
+    getCurrentUser,
+    updateAccountDetails,
+    updateUserAvatar,
+    updateCoverImage,
+    getUserChannelProfile
 }

@@ -55,3 +55,6 @@ Purpose: Used to get a new access token when the old one expires.
 Lifetime: Long-lived (e.g., 7 days).
 Usage: Sent to the server to request a new access token.
 Storage: Stored securely, typically in an HTTP-only cookie.
+
+# MongoDB aggregation piplines
+Aggregation pipelines in MongoDB are a powerful framework for data aggregation, transforming collections of documents into aggregated results. They are used for operations like filtering, sorting, grouping, reshaping, and modifying documents.
